@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 import RPi.GPIO as gpio
 import time, threading
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,redirect
 
 LIGHT_GPIO = 2
 CRITICAL_TIMEOUT = 1800
@@ -85,10 +85,27 @@ def manage_sexy_light(states):
     else:
         disable_sexy_red_police_light()
 
+@app.route('/hilde')
+def hilde():
+	return redirect('/snafu');
 
 @app.route('/snafu')
 def snafu():
-    return render_template('snafu.html')
+	SNAFU_FILE='/tmp/snafu.time'
+	if request.args.get('update',None) is not None:
+		open(SNAFU_FILE,'w').write(str(int(time.time())))	
+
+	try: 
+		incident = int(open(SNAFU_FILE).read())
+		days = int((time.time()-incident)/86400)
+	except Exception:
+		days = 0
+	days = str(days)
+	
+	if request.args.get('get',None) is not None:
+		return days
+	else:
+		return render_template('snafu.html', days=days)
 
 @app.route('/')
 def main():
